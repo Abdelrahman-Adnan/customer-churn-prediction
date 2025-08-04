@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Data files
+*.csv
+*.gz
+*.h5
+*.pickle
+*.pkl
+*.parquet
+
+# Models
+*.bin
+*.model
+*.h5
+*.joblib
+
+# Environment variables
+.env
+
+# VS Code
+.vscode/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Logs
+logs/
+*.log
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Large files
+*.zip
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
