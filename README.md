@@ -128,7 +128,6 @@ Python 3.9 + Scikit-learn + XGBoost + LightGBM
 | **Database** | PostgreSQL | Metadata & metrics storage | 13+ |
 |  | SQLite | Local development database | Latest |
 | **Monitoring** | Grafana | Monitoring dashboards | Latest |
-|  | Prometheus | Metrics collection | Latest |
 | **Infrastructure** | Docker | Containerization | Latest |
 |  | Docker Compose | Local orchestration | Latest |
 |  | Terraform | Infrastructure as Code | Latest |
