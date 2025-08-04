@@ -1,0 +1,29 @@
+[flake8]
+max-line-length = 88
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .env,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    mlruns,
+    mlartifacts,
+    artifacts
+ignore =
+    E203,
+    W503,
+    E501,
+    E402,
+    F401,
+    F541,
+    E722,
+    W291,
+    W293
+per-file-ignores =
+    services/*:E402,F401,F541,E722,W291,W293,
+    __init__.py:F401
