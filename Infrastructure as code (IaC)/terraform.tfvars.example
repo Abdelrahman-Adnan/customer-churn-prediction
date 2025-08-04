@@ -1,0 +1,8 @@
+# Example terraform.tfvars file
+# Copy this to terraform.tfvars and customize as needed
+
+# Project name (will be used in resource names)
+project_name = "churn-ml"
+
+# You can customize the project name by uncommenting and changing:
+# project_name = "my-ml-project"
