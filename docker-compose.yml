@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: churn_ml_monitoring
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mlops-network
+
+  # MLflow Server
+  mlflow:
+    image: python:3.10-slim
+    command: >
+      sh -c "pip install mlflow psycopg2-binary &&
+             mlflow server --backend-store-uri postgresql://postgres:postgres@postgres:5432/churn_ml_monitoring
+             --default-artifact-root /mlflow/artifacts
+             --host 0.0.0.0 --port 5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    depends_on:
+      - postgres
+    networks:
+      - mlops-network
+
+  # Web Application (FastAPI + Streamlit)
+  web-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web-app
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://localhost:8000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./models:/app/models
+    depends_on:
+      - mlflow
+    networks:
+      - mlops-network
+
+  # Training Service
+  training:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.training
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - mlflow
+      - postgres
+    networks:
+      - mlops-network
+
+  # Monitoring Service
+  monitoring:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.monitoring
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=churn_ml_monitoring
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - postgres
+      - mlflow
+    networks:
+      - mlops-network
+
+volumes:
+  postgres_data:
+  mlflow_data:
+
+networks:
+  mlops-network:
+    driver: bridge

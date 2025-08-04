@@ -1,0 +1,24 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY services/web-app/ .
+COPY models/ ./models/
+
+# Expose ports for both FastAPI and Streamlit
+EXPOSE 8000 8501
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+# Start FastAPI in background\n\
+python fastapi_app.py &\n\
+# Start Streamlit\n\
+streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0\n\
+' > start.sh && chmod +x start.sh
+
+CMD ["./start.sh"]

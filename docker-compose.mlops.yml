@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: churn_ml_monitoring
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mlops-network
+
+  # MLflow Server
+  mlflow:
+    image: python:3.10-slim
+    command: >
+      sh -c "pip install mlflow psycopg2-binary &&
+             mlflow server --backend-store-uri postgresql://postgres:postgres@postgres:5432/churn_ml_monitoring
+             --default-artifact-root /mlflow/artifacts
+             --host 0.0.0.0 --port 5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    depends_on:
+      - postgres
+    networks:
+      - mlops-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - postgres
+    networks:
+      - mlops-network
+
+  # Adminer
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - mlops-network
+
+  # Training Service
+  training:
+    build:
+      context: .
+      dockerfile: services/training/Dockerfile
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+      - postgres
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./mlartifacts:/app/mlartifacts
+    networks:
+      - mlops-network
+    restart: "no"
+
+  # Web Application (FastAPI + Streamlit)
+  web-app:
+    build:
+      context: .
+      dockerfile: services/web-app/Dockerfile
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+    volumes:
+      - ./models:/app/models
+    networks:
+      - mlops-network
+
+  # Monitoring Service
+  monitoring:
+    build:
+      context: .
+      dockerfile: services/monitoring/Dockerfile
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=churn_ml_monitoring
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - postgres
+      - mlflow
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    networks:
+      - mlops-network
+    restart: "no"
+
+volumes:
+  postgres_data:
+  mlflow_data:
+  grafana_data:
+
+networks:
+  mlops-network:
+    driver: bridge
