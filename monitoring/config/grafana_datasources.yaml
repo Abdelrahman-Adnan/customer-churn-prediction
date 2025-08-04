@@ -1,0 +1,19 @@
+#config file version
+apiVersion: 1
+
+# list of datasources to insert/update
+# available in the database
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: db:5432
+    database: ml_metrics_db
+    user: postgres
+    secureJsonData:
+      password: 'example'
+    jsonData:
+      sslmode: 'disable'
+      postgresVersion: 1500
+      timescaledb: false
+    uid: PCC52D03280B7034C
